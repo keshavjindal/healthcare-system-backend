@@ -8,12 +8,9 @@ export class AuthController {
         try {
             const { name, email, password, role } = req.body
             const ipAddress = req.ip
-            const user = await AuthService.registerUser(name, email, password, role, ipAddress)
-            res.status(201).json({
-                message: 'User registered successfully',
-                user: user
-            })
-        } catch (error) {            
+            const response = await AuthService.registerUser(name, email, password, role, ipAddress)
+            res.status(201).json(response)
+        } catch (error) {
             res.status(400).json({
                 error: error.message
             })
@@ -29,7 +26,7 @@ export class AuthController {
                 message: 'User is login successfully',
                 user: user
             })
-        } catch (error) {            
+        } catch (error) {
             res.status(400).json({
                 error: error.message
             })
@@ -49,15 +46,15 @@ export class AuthController {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
                 const userId = decoded.userId;
                 const sessionId = decoded.sessionId;
-        
-                await AuthService.logoutUser(userId, sessionId);
-        
-                res.status(200).json({ message: 'Logout successful' });
-              } catch (error) {
-                return res.status(401).json({ message: 'Invalid token' });
-              }
 
-        } catch (error) {            
+                await AuthService.logoutUser(userId, sessionId);
+
+                res.status(200).json({ message: 'Logout successful' });
+            } catch (error) {
+                return res.status(401).json({ message: 'Invalid token' });
+            }
+
+        } catch (error) {
             res.status(400).json({
                 error: error.message
             })

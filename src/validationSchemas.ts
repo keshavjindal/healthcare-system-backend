@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { AppointmentStatus, Role } from "@prisma/client";
 import Joi from "joi";
 
 export const registerSchema = Joi.object({
@@ -11,4 +11,14 @@ export const registerSchema = Joi.object({
 export const loginSchema = Joi.object({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8).max(30)
+})
+
+export const createAppointmentSchema = Joi.object({
+    doctorEmail: Joi.string().required().email(),
+    dateTime: Joi.date().iso().required()
+})
+
+export const updateAppointmentSchema = Joi.object({
+    dateTime: Joi.date().iso().required(),
+    status: Joi.string().valid(...Object.values(AppointmentStatus)).required()
 })

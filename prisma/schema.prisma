@@ -20,9 +20,8 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      UserSession[]
   loginAttempts LoginAttempt[]
-
-  // appointments  Appointment[]
-  // healthRecords HealthRecord[]
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments Appointment[] @relation("DoctorAppointments")
 }
 
 model UserSession {
@@ -43,18 +42,17 @@ model LoginAttempt {
   isSuccess     Boolean
 }
 
-// model Appointment {
-//   id          String   @id @default(uuid())
-//   patientId   String
-//   patient     User     @relation(fields: [patientId], references: [id])
-//   doctorId    String
-//   doctor      User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
-//   dateTime    DateTime
-//   status      AppointmentStatus
-//   type        String
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-// }
+model Appointment {
+  id          String   @id @default(uuid())
+  patientId   String
+  patient     User     @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctorId    String
+  doctor      User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  dateTime    DateTime
+  status      AppointmentStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 
 // model HealthRecord {
 //   id          String   @id @default(uuid())
@@ -96,11 +94,11 @@ enum Role {
   ADMIN
 }
 
-// enum AppointmentStatus {
-//   SCHEDULED
-//   COMPLETED
-//   CANCELLED
-// }
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
 
 // enum ResourceStatus {
 //   AVAILABLE

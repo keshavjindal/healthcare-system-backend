@@ -4,26 +4,20 @@ import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { EmailAlreadyExistsError, EmailNotFoundError, InvalidPasswordError } from "../errors/customErrors";
 import jwt from "jsonwebtoken";
 
-export interface UserRegisterResponse {
-    user: User,
-    userSession: UserSession
-    // we dont return loginAttempt here
-}
-
-export interface UserLoginResponse {
-    token: string
+export interface AuthLoginResponse {
+    message: string,
     user: {
         id: string
         email: string
         name: string
         role: Role
     },
-    userSession: UserSession
+    token: string
 }
 
 export class AuthService {
 
-    static async registerUser(name: string, email: string, password: string, role: Role, ipAddress: string): Promise<UserRegisterResponse> {
+    static async registerUser(name: string, email: string, password: string, role: Role, ipAddress: string): Promise<AuthLoginResponse> {
         try {
             const existingUser: User = await prisma.user.findUnique({ where: { email } });
             if (existingUser) {
@@ -57,10 +51,28 @@ export class AuthService {
                     }
                 })
 
-                return { user, userSession }
+                // create jwt token
+                const token = jwt.sign(
+                    { userId: user.id, email: user.email, role: user.role, sessionId: userSession.id },
+                    process.env.JWT_SECRET!,
+                    { expiresIn: '1d' }
+                );
+
+                return { user, userSession, token }
             })
 
-            return result;
+            const response: AuthLoginResponse = {
+                message: "User registered successfully",
+                user: {
+                    id: result.user.id,
+                    email: result.user.email,
+                    name: result.user.name,
+                    role: result.user.role
+                },
+                token: result.token
+            }
+
+            return response
         } catch (error) {
             await prisma.loginAttempt.create({
                 data: {
@@ -79,7 +91,7 @@ export class AuthService {
         }
     }
 
-    static async loginUser(email: string, password: string, ipAddress: string): Promise<UserLoginResponse> {
+    static async loginUser(email: string, password: string, ipAddress: string): Promise<AuthLoginResponse> {
         try {
             const user: User = await prisma.user.findUnique({ where: { email } })
             if (!user) {
@@ -91,38 +103,44 @@ export class AuthService {
                 throw new InvalidPasswordError();
             }
 
-            const userSession: UserSession = await prisma.userSession.create({
-                data: {
-                    userId: user.id,
-                    ipAddress: ipAddress
-                }
+            const result = await prisma.$transaction(async (prisma) => {
+                const userSession: UserSession = await prisma.userSession.create({
+                    data: {
+                        userId: user.id,
+                        ipAddress: ipAddress
+                    }
+                })
+
+                // create jwt token
+                const token = jwt.sign(
+                    { userId: user.id, email: user.email, role: user.role, sessionId: userSession.id },
+                    process.env.JWT_SECRET!,
+                    { expiresIn: '1d' }
+                );
+    
+                await prisma.loginAttempt.create({
+                    data: {
+                        userId: user.id,
+                        ipAddress: ipAddress,
+                        isSuccess: true
+                    }
+                })
+
+                return { user, userSession, token }
             })
 
-            await prisma.loginAttempt.create({
-                data: {
-                    userId: user.id,
-                    ipAddress: ipAddress,
-                    isSuccess: true
-                }
-            })
-
-            // create jwt token
-            const token = jwt.sign(
-                { userId: user.id, email: user.email, role: user.role, sessionId: userSession.id },
-                process.env.JWT_SECRET!,
-                { expiresIn: '1h' }
-            );
-
-            return {
-                token,
+            const response: AuthLoginResponse = {
+                message: "User logged in successfully",
                 user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role
+                    id: result.user.id,
+                    email: result.user.email,
+                    name: result.user.name,
+                    role: result.user.role
                 },
-                userSession
-            };
+                token: result.token
+            }
+
+            return response
 
         } catch (error) {
             await prisma.loginAttempt.create({
