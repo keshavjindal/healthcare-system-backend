@@ -1,4 +1,4 @@
-import { Appointment, AppointmentStatus } from "@prisma/client"
+import { Appointment, AppointmentStatus, Role } from "@prisma/client"
 import { prisma } from "../prisma"
 import { DoctorNotFoundError } from "../errors/customErrors"
 
@@ -25,6 +25,12 @@ export interface GetAppointmentByIdResponse {
         name: string,
         email: string
     }
+}
+
+export interface GetAllAppointmentsResponse {
+    email: string,
+    role: Role,
+    appointments: Array<any>
 }
 
 export class AppointmentService {
@@ -121,6 +127,49 @@ export class AppointmentService {
         } catch (error) {
             console.error("Unexpected error in AppointmentService.getAppointmentById:", error);
             throw new Error("An unexpected error occurred while getting the appointment");
+        }
+    }
+
+    static async getAllAppointments(userId: string, userEmail: string, userRole: Role): Promise<GetAllAppointmentsResponse> {
+        try {
+            let appointments = []
+
+            if(userRole === 'DOCTOR') {
+                appointments = await prisma.appointment.findMany({
+                    where: { doctorId: userId },
+                    select: {
+                        id: true,
+                        dateTime: true,
+                        status: true,
+                        patient: {
+                            select: { name: true, email: true }
+                        }   
+                    }
+                })
+            }
+            else if(userRole === 'PATIENT') {
+                appointments = await prisma.appointment.findMany({
+                    where: { patientId: userId },
+                    select: {
+                        id: true,
+                        dateTime: true,
+                        status: true,
+                        doctor: {
+                            select: { name: true, email: true }
+                        }    
+                    }
+                })
+            }
+
+            return {
+                email: userEmail,
+                role: userRole,
+                appointments
+            }
+
+        } catch (error) {
+            console.error("Unexpected error in AppointmentService.getAllAppointments:", error);
+            throw new Error("An unexpected error occurred while getting the appointments");
         }
     }
 }

@@ -10,4 +10,7 @@ router.post('/', AuthMiddleware.authenticateJWT, AuthMiddleware.validateSchema(c
 router.put('/:id', AuthMiddleware.authenticateJWT, AuthMiddleware.validateSchema(updateAppointmentSchema), AppointmentController.updateAppointment)
 router.get('/:id', AuthMiddleware.authenticateJWT, AppointmentController.getAppointmentById)
 
+// this request can be made by both patient or doctor
+router.get('/', AuthMiddleware.authenticateJWT, AppointmentController.getAllAppointments)
+
 export default router;

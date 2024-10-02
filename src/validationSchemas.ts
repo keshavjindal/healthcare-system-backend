@@ -19,6 +19,6 @@ export const createAppointmentSchema = Joi.object({
 })
 
 export const updateAppointmentSchema = Joi.object({
-    dateTime: Joi.date().iso().required(),
-    status: Joi.string().valid(...Object.values(AppointmentStatus)).required()
+    dateTime: Joi.date().iso(),
+    status: Joi.string().valid(...Object.values(AppointmentStatus))
 })
