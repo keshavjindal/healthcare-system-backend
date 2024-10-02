@@ -1,0 +1,313 @@
+openapi: 3.0.0
+info:
+  title: Healthcare System Backend API
+  description: APIs for managing healthcare data and operations
+  version: 1.0.0
+servers:
+  # - url: https://api.healthcare-system.com/v1
+  - url: http://localhost:3000/
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication APIs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+  
+  /auth/login:
+    post:
+      summary: Login user
+      tags:
+        - Authentication APIs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+
+  /auth/logout:
+    post:
+      summary: Logout user
+      tags:
+        - Authentication APIs
+      security:
+        - BearerAuth: []
+      parameters:
+       - in: header
+         name: Authorization
+         required: true
+         schema:
+           type: string
+         description: Bearer <token>
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          description: Unauthorized
+
+  /appointments:
+    post:
+      summary: Create a new appointment
+      tags:
+        - Appointments
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentCreate'
+      responses:
+        '201':
+          description: Appointment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '400':
+          description: Bad request
+    
+    get:
+      summary: Get all appointments
+      tags:
+        - Appointments
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: patientId
+          schema:
+            type: string
+        - in: query
+          name: doctorId
+          schema:
+            type: string
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+
+  /health-records:
+    post:
+      summary: Create a new health record
+      tags:
+        - Health Records
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthRecordCreate'
+      responses:
+        '201':
+          description: Health record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthRecord'
+        '400':
+          description: Bad request
+
+  /health-records/patient/{patientId}:
+    get:
+      summary: Get all records for a patient
+      tags:
+        - Health Records
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthRecord'
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRegistration:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - role
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        role:
+          type: string
+          enum: [PATIENT, DOCTOR, ADMIN]
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+
+    AppointmentCreate:
+      type: object
+      required:
+        - patientId
+        - doctorId
+        - dateTime
+      properties:
+        patientId:
+          type: string
+        doctorId:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+        patientId:
+          type: string
+        doctorId:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        type:
+          type: string
+        status:
+          type: string
+          enum: [SCHEDULED, COMPLETED, CANCELLED]
+
+    HealthRecordCreate:
+      type: object
+      required:
+        - patientId
+        - doctorId
+        - diagnosis
+      properties:
+        patientId:
+          type: string
+        doctorId:
+          type: string
+        diagnosis:
+          type: string
+        prescription:
+          type: string
+        notes:
+          type: string
+
+    HealthRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        patientId:
+          type: string
+        doctorId:
+          type: string
+        diagnosis:
+          type: string
+        prescription:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
