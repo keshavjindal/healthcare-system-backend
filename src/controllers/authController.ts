@@ -21,39 +21,23 @@ export class AuthController {
         try {
             const { email, password } = req.body
             const ipAddress = req.ip
-            const user = await AuthService.loginUser(email, password, ipAddress)
-            res.status(201).json({
-                message: 'User is login successfully',
-                user: user
-            })
+            const response = await AuthService.loginUser(email, password, ipAddress)
+            res.status(201).json(response)
         } catch (error) {
-            res.status(400).json({
+            res.status(401).json({
                 error: error.message
             })
         }
     }
 
-    static async logoutUser(req: Request, res: Response) {
+    static async logoutUser(req: Request, res: Response) {        
         try {
-            const authHeader = req.headers['authorization'];
-            const token = authHeader && authHeader.split(' ')[1];
+            const userId = req.decodedToken.userId;
+            const sessionId = req.decodedToken.sessionId;
 
-            if (!token) {
-                return res.status(401).json({ message: 'No token provided' });
-            }
-
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
-                const userId = decoded.userId;
-                const sessionId = decoded.sessionId;
-
-                await AuthService.logoutUser(userId, sessionId);
-
-                res.status(200).json({ message: 'Logout successful' });
-            } catch (error) {
-                return res.status(401).json({ message: 'Invalid token' });
-            }
-
+            await AuthService.logoutUser(userId, sessionId);
+            res.status(200).json({ message: 'Logout successful' });
+            
         } catch (error) {
             res.status(400).json({
                 error: error.message

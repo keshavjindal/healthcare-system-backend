@@ -7,6 +7,6 @@ const router = Router()
 
 router.post('/register', AuthMiddleware.validateSchema(registerSchema), AuthController.registerUser)
 router.post('/login', AuthMiddleware.validateSchema(loginSchema), AuthController.loginUser)
-router.post('/logout', AuthController.logoutUser)
+router.post('/logout', AuthMiddleware.authenticateJWT, AuthController.logoutUser)
 
 export default router;
