@@ -25,3 +25,10 @@ export class DoctorNotFoundError extends Error {
         this.name = 'DoctorNotFoundError';
     }
 }
+
+export class AdminAccessDeniedError extends Error {
+    constructor() {
+        super('Admin access denied');
+        this.name = 'AdminAccessDeniedError';
+    }
+}

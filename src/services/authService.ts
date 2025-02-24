@@ -3,6 +3,9 @@ import { prisma } from "../prisma";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { EmailAlreadyExistsError, EmailNotFoundError, InvalidPasswordError } from "../errors/customErrors";
 import jwt from "jsonwebtoken";
+import { ethers } from "ethers";
+const infuraNodeProvider = new ethers.JsonRpcProvider(process.env.INFURA_URL)
+
 
 export interface AuthLoginResponse {
     message: string,
@@ -10,7 +13,8 @@ export interface AuthLoginResponse {
         id: string
         email: string
         name: string
-        role: Role
+        role: Role,
+        ethereumAddress: string
     },
     token: string
 }
@@ -26,13 +30,20 @@ export class AuthService {
 
             const hashedPassword = await hashPassword(password)
 
+            // generate Ethereum Account
+            const wallet = ethers.Wallet.createRandom()
+            const ethereumAddress = wallet.address
+            const encryptedJSON = await wallet.encrypt(password) // this json contains encrypted private key
+
             const result = await prisma.$transaction(async (prisma) => {
                 const user: User = await prisma.user.create({
                     data: {
                         name,
                         email,
                         password: hashedPassword,
-                        role
+                        role,
+                        ethereumAddress,
+                        encryptedJSON
                     }
                 })
 
@@ -67,7 +78,8 @@ export class AuthService {
                     id: result.user.id,
                     email: result.user.email,
                     name: result.user.name,
-                    role: result.user.role
+                    role: result.user.role,
+                    ethereumAddress: result.user.ethereumAddress
                 },
                 token: result.token
             }
@@ -135,7 +147,8 @@ export class AuthService {
                     id: result.user.id,
                     email: result.user.email,
                     name: result.user.name,
-                    role: result.user.role
+                    role: result.user.role,
+                    ethereumAddress: result.user.ethereumAddress
                 },
                 token: result.token
             }

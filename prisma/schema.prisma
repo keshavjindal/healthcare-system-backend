@@ -16,12 +16,16 @@ model User {
   email         String    @unique
   password      String
   role          Role
+  ethereumAddress String  @unique
+  encryptedJSON String @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  dateOfBirth   DateTime?
   sessions      UserSession[]
   loginAttempts LoginAttempt[]
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments Appointment[] @relation("DoctorAppointments")
+  gender        Gender?
 }
 
 model UserSession {
@@ -67,16 +71,6 @@ model Appointment {
 //   updatedAt   DateTime @updatedAt
 // }
 
-// model Resource {
-//   id        String   @id @default(uuid())
-//   name      String
-//   type      String
-//   capacity  Int
-//   status    ResourceStatus
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
 // model Notification {
 //   id        String   @id @default(uuid())
 //   userId    String
@@ -98,6 +92,12 @@ enum AppointmentStatus {
   SCHEDULED
   COMPLETED
   CANCELLED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
 }
 
 // enum ResourceStatus {

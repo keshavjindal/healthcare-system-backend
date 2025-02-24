@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { UserController } from "../controllers/userController";
+import { AuthMiddleware } from "../middlewares/authMiddleware";
 
 const router = Router()
 
-// router.post('/register', AuthMiddleware.validateSchema(registerSchema), AuthController.registerUser)
-router.get('/', UserController.getAllUsers)
-router.get('/:id', UserController.getUserById)
+router.get('/', AuthMiddleware.authenticateJWT, UserController.getAllUsers)
+router.get('/:id', AuthMiddleware.authenticateJWT, UserController.getUserById)
+router.put('/:id', AuthMiddleware.authenticateJWT, UserController.updateUser)
 
 export default router;
