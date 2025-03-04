@@ -22,3 +22,8 @@ export const updateAppointmentSchema = Joi.object({
     dateTime: Joi.date().iso(),
     status: Joi.string().valid(...Object.values(AppointmentStatus))
 })
+
+export const uploadHealthRecordSchema = Joi.object({
+    file: Joi.any().optional(),
+    patientEmail: Joi.string().optional().email()
+})

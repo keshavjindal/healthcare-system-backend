@@ -26,6 +26,13 @@ export class DoctorNotFoundError extends Error {
     }
 }
 
+export class PatientNotFoundError extends Error {
+    constructor() {
+        super('Patient not found');
+        this.name = 'PatientNotFoundError';
+    }
+}
+
 export class AdminAccessDeniedError extends Error {
     constructor() {
         super('Admin access denied');

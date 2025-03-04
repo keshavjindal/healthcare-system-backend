@@ -25,6 +25,7 @@ model User {
   loginAttempts LoginAttempt[]
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments Appointment[] @relation("DoctorAppointments")
+  healthRecords HealthRecord[] @relation("HealthRecords")
   gender        Gender?
 }
 
@@ -58,18 +59,14 @@ model Appointment {
   updatedAt   DateTime @updatedAt
 }
 
-// model HealthRecord {
-//   id          String   @id @default(uuid())
-//   patientId   String
-//   patient     User     @relation(fields: [patientId], references: [id])
-//   doctorId    String
-//   doctor      User     @relation("DoctorHealthRecords", fields: [doctorId], references: [id])
-//   diagnosis   String
-//   prescription String?
-//   notes       String?
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-// }
+model HealthRecord {
+  id          String   @id @default(uuid())
+  patientId   String
+  patient     User     @relation("HealthRecords", fields: [patientId], references: [id])
+  recordData  Bytes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 
 // model Notification {
 //   id        String   @id @default(uuid())
