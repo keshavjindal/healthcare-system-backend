@@ -12,5 +12,5 @@ router.get('/:id', AuthMiddleware.authenticateJWT, AppointmentController.getAppo
 
 // this request can be made by both patient or doctor
 router.get('/', AuthMiddleware.authenticateJWT, AppointmentController.getAllAppointments)
-
+router.delete('/:id', AuthMiddleware.authenticateJWT, AppointmentController.deleteAppointment)
 export default router;

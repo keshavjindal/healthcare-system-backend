@@ -36,6 +36,38 @@ export class UserController {
         }
     }
 
+    static async getUserPoints(req: Request, res: Response) {
+        try {
+            const userId = req.params.id;
+            const points = await UserService.getUserPoints(userId);
+            return res.status(200).json({ points });
+        } catch (error) {
+            return res.status(400).json({
+                error_message: error.message
+            });
+        }
+    }
+
+    static async redeemPoints(req: Request, res: Response) {
+        try {
+            const userId = req.params.id;
+            const { pointsToRedeem } = req.body;
+
+            if (!pointsToRedeem || typeof pointsToRedeem !== 'number' || pointsToRedeem <= 0) {
+                return res.status(400).json({
+                    error_message: "Please provide a valid number of points to redeem"
+                });
+            }
+
+            const remainingPoints = await UserService.redeemPoints(userId, pointsToRedeem);
+            return res.status(200).json({ remainingPoints });
+        } catch (error) {
+            return res.status(400).json({
+                error_message: error.message
+            });
+        }
+    }
+
     static async updateUser(req: Request, res: Response) {
         try {
             const userId = req.params.id
@@ -49,6 +81,37 @@ export class UserController {
             return res.status(201).json({ user })
         } catch (error) {
             res.status(400).json({ error_message: error.message })
+        }
+    }
+
+    static async uploadPhoto(req: Request, res: Response) {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ error: 'No photo uploaded' });
+            }
+
+            const userId = req.decodedToken?.userId;
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const photoBuffer = req.file.buffer;
+            const result = await UserService.updateUserPhoto(userId, photoBuffer);
+            
+            return res.status(200).json(result);
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            return res.status(500).json({ error: 'Failed to upload photo' });
+        }
+    }
+
+    static async getAllDoctors(req: Request, res: Response) {
+        try {
+            const doctors = await UserService.getAllDoctors();
+            return res.status(200).json({ doctors });
+        } catch (error) {
+            console.error('Error fetching doctors:', error);   
+            res.status(400).json({ error_message: error.message }) 
         }
     }
 }

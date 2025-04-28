@@ -18,6 +18,8 @@ model User {
   role          Role
   ethereumAddress String  @unique
   encryptedJSON String @unique
+  photo         Bytes?    // Store actual photo content
+  points        Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   dateOfBirth   DateTime?
@@ -26,7 +28,9 @@ model User {
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments Appointment[] @relation("DoctorAppointments")
   healthRecords HealthRecord[] @relation("HealthRecords")
+  recordChanges HealthRecordChange[] @relation("ChangeMadeBy")
   gender        Gender?
+  specialization String? // only for doctors
 }
 
 model UserSession {
@@ -55,6 +59,9 @@ model Appointment {
   doctor      User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
   dateTime    DateTime
   status      AppointmentStatus
+  paymentStatus PaymentStatus
+  paymentMethod PaymentMethod
+  amount      Int      // Amount in USD or points depending on payment method
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -64,8 +71,27 @@ model HealthRecord {
   patientId   String
   patient     User     @relation("HealthRecords", fields: [patientId], references: [id])
   recordData  Bytes
+  recordName  String
+  recordSize  Int
+  recordType  HealthRecordType
+  dataHash    String
+  mimeType    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  changes     HealthRecordChange[]
+  isHashVerified Boolean?
+}
+
+model HealthRecordChange {
+  id              String   @id @default(uuid())
+  healthRecord    HealthRecord @relation(fields: [healthRecordId], references: [id])
+  healthRecordId  String
+  changedBy       User     @relation("ChangeMadeBy", fields: [changedById], references: [id])
+  changedById     String
+  changeType      ChangeType
+  description     String
+  transactionHash String   // Ethereum transaction hash
+  createdAt       DateTime @default(now())
 }
 
 // model Notification {
@@ -85,6 +111,11 @@ enum Role {
   ADMIN
 }
 
+enum HealthRecordType {
+  FILE
+  FORM
+}
+
 enum AppointmentStatus {
   SCHEDULED
   COMPLETED
@@ -95,6 +126,12 @@ enum Gender {
   MALE
   FEMALE
   OTHER
+}
+
+enum ChangeType {
+  CREATED
+  UPDATED
+  DELETED
 }
 
 // enum ResourceStatus {
@@ -108,3 +145,13 @@ enum Gender {
 //   SMS
 //   IN_APP
 // }
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
+enum PaymentMethod {
+  CASH
+  POINTS
+}

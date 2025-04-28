@@ -9,7 +9,10 @@ export interface CreateAppointmentResponse {
         doctorEmail?: string,
         patientId: string,
         dateTime: string,
-        status: string
+        status: string,
+        paymentStatus: string,
+        paymentMethod: string,
+        amount: number
     }
 }
 
@@ -35,11 +38,21 @@ export interface GetAllAppointmentsResponse {
 
 export class AppointmentService {
 
-    static async createAppointment(doctorEmail: string, patientId: string, dateTime: string): Promise<CreateAppointmentResponse> {
+    static async createAppointment(doctorEmail: string, doctorUserId: string, patientId: string, dateTime: string, paymentMethod: 'CASH' | 'POINTS'): Promise<CreateAppointmentResponse> {
         try {
-            const doctor = await prisma.user.findUnique({ where: { email: doctorEmail, role: 'DOCTOR' } })
-            if (!doctor) {
-                throw new DoctorNotFoundError();
+            let doctor;
+
+            if (doctorEmail) {
+                const doctor = await prisma.user.findUnique({ where: { email: doctorEmail, role: 'DOCTOR' } })
+                if (!doctor) {
+                    throw new DoctorNotFoundError();
+                }
+            }
+            else if (doctorUserId) {
+                doctor = await prisma.user.findUnique({ where: { id: doctorUserId, role: 'DOCTOR' } })
+                if (!doctor) {
+                    throw new DoctorNotFoundError();
+                }
             }
 
             const doctorId = doctor.id
@@ -48,7 +61,10 @@ export class AppointmentService {
                     doctorId,
                     patientId,
                     dateTime,
-                    status: 'SCHEDULED'
+                    status: 'SCHEDULED',
+                    paymentStatus: paymentMethod === 'POINTS' ? 'PAID' : 'PENDING',
+                    paymentMethod,
+                    amount: paymentMethod === 'CASH' ? 500 : 200
                 }
             })
 
@@ -59,9 +75,14 @@ export class AppointmentService {
                     doctorEmail,
                     patientId: result.patientId,
                     dateTime: result.dateTime.toISOString(),
-                    status: result.status
+                    status: result.status,
+                    paymentStatus: result.paymentStatus,
+                    paymentMethod: result.paymentMethod,
+                    amount: result.amount
                 }
             }
+
+            console.log("response", response)
 
             return response
         } catch (error) {
@@ -95,7 +116,10 @@ export class AppointmentService {
                     id: appointmentId,
                     patientId: result.patientId,
                     dateTime: result.dateTime.toISOString(),
-                    status: result.status
+                    status: result.status,
+                    paymentStatus: result.paymentStatus,
+                    paymentMethod: result.paymentMethod,
+                    amount: result.amount
                 }
             }
 
@@ -156,7 +180,10 @@ export class AppointmentService {
                         status: true,
                         doctor: {
                             select: { name: true, email: true }
-                        }    
+                        },
+                        paymentStatus: true,
+                        paymentMethod: true,
+                        amount: true
                     }
                 })
             }
@@ -170,6 +197,16 @@ export class AppointmentService {
         } catch (error) {
             console.error("Unexpected error in AppointmentService.getAllAppointments:", error);
             throw new Error("An unexpected error occurred while getting the appointments");
+        }
+    }
+
+    static async deleteAppointment(appointmentId: string): Promise<any> {
+        try {
+            await prisma.appointment.delete({ where: { id: appointmentId } })
+            return { message: 'Appointment deleted successfully' }
+        } catch (error) {
+            console.error("Unexpected error in AppointmentService.deleteAppointment:", error);
+            throw new Error("An unexpected error occurred while deleting the appointment");
         }
     }
 }

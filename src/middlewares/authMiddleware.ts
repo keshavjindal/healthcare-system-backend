@@ -25,7 +25,7 @@ export class AuthMiddleware {
         };
     }
 
-    static authenticateJWT(req: Request, res: Response, next: NextFunction) {
+    static authenticateJWT(req: Request, res: Response, next: NextFunction) {  
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
         if (!token) {
@@ -37,6 +37,7 @@ export class AuthMiddleware {
             req.decodedToken = decoded
             next();
         } catch (error) {
+            console.log("error", error)
             return res.status(401).json({ message: 'Invalid token' });
         }
     }

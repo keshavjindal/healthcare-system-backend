@@ -4,6 +4,7 @@ import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { EmailAlreadyExistsError, EmailNotFoundError, InvalidPasswordError } from "../errors/customErrors";
 import jwt from "jsonwebtoken";
 import { ethers } from "ethers";
+import { EthereumService } from "../utils/ethereumService";
 const infuraNodeProvider = new ethers.JsonRpcProvider(process.env.INFURA_URL)
 
 
@@ -33,7 +34,7 @@ export class AuthService {
             // generate Ethereum Account
             const wallet = ethers.Wallet.createRandom()
             const ethereumAddress = wallet.address
-            const encryptedJSON = await wallet.encrypt(password) // this json contains encrypted private key
+            const encryptedJSON = await wallet.encrypt(hashedPassword)
 
             const result = await prisma.$transaction(async (prisma) => {
                 const user: User = await prisma.user.create({
@@ -71,6 +72,15 @@ export class AuthService {
 
                 return { user, userSession, token }
             })
+
+            // Send test ETH to the new user's address
+            try {
+                // await EthereumService.sendTestEther(ethereumAddress);
+                console.log(`Test ETH sent to new user at address: ${ethereumAddress}`);
+            } catch (error) {
+                // Don't fail registration if sending test ETH fails
+                console.error('Failed to send test ETH to new user:', error);
+            }
 
             const response: AuthLoginResponse = {
                 message: "User registered successfully",

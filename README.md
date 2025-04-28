@@ -1,5 +1,6 @@
 ### How to run project locally:
-npx ts-node src/server.ts
+npm run dev (new)
+npx ts-node src/server.ts (old)
 
 ### How to install a package:
 npm i <package-name> && <br>

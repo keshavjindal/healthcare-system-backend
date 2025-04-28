@@ -15,7 +15,8 @@ dotenv.config()
 const app: Express = express();
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // parses json bodies which we send in the request and 
+// converts them into javascript objects, so we can access them in req.body
 
 const swaggerDocument = YAML.load('./swagger.yaml');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

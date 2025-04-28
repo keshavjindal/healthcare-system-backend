@@ -14,9 +14,11 @@ export const loginSchema = Joi.object({
 })
 
 export const createAppointmentSchema = Joi.object({
-    doctorEmail: Joi.string().required().email(),
-    dateTime: Joi.date().iso().required()
-})
+    doctorEmail: Joi.string().email().optional(),
+    doctorUserId: Joi.string().uuid().optional(),
+    dateTime: Joi.date().iso().required(),
+    paymentMethod: Joi.string().valid('CASH', 'POINTS').required()
+}).xor('doctorEmail', 'doctorUserId');
 
 export const updateAppointmentSchema = Joi.object({
     dateTime: Joi.date().iso(),
@@ -24,6 +26,25 @@ export const updateAppointmentSchema = Joi.object({
 })
 
 export const uploadHealthRecordSchema = Joi.object({
-    file: Joi.any().optional(),
-    patientEmail: Joi.string().optional().email()
+    patientEmail: Joi.string().email().required(),
+    recordType: Joi.string().valid('FILE', 'FORM').required(),
+    formData: Joi.object().when('recordType', {
+        is: 'FORM',
+        then: Joi.object().required(),
+        otherwise: Joi.forbidden()
+    })
+})
+
+export const updateHealthRecordSchema = Joi.object({
+    recordName: Joi.string().optional(),
+    recordType: Joi.string().valid('FILE', 'FORM').optional(),
+    formData: Joi.object().when('recordType', {
+        is: 'FORM',
+        then: Joi.object().required(),
+        otherwise: Joi.forbidden()
+    })
+})
+
+export const updateUserSchema = Joi.object({
+
 })
